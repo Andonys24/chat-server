@@ -64,7 +64,7 @@ public class ServerApp {
                 System.out.println("Cliente Conectado: " + clientInfo);
 
                 // Crear hilo virtual por cada cliente
-                Thread.ofVirtual().start(new ClientHandler(client, fm));
+                Thread.ofVirtual().start(new ConnectionHandler(client, fm));
 
             } catch (IOException e) {
                 // Si el servidor se está cerrando, no mostrar el error

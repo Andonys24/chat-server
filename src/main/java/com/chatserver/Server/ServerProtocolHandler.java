@@ -5,11 +5,11 @@ import java.io.InputStream;
 import java.io.OutputStream;
 
 import com.chatserver.Utils.FileManager;
-import com.chatserver.Utils.RequestManager;
+import com.chatserver.Utils.ProtocolManager;
 
-public class ServerRequestHandler extends RequestManager {
+public class ServerProtocolHandler extends ProtocolManager {
 
-    public ServerRequestHandler(FileManager fileManager, InputStream input, OutputStream out) {
+    public ServerProtocolHandler(FileManager fileManager, InputStream input, OutputStream out) {
         super(input, out);
     }
 

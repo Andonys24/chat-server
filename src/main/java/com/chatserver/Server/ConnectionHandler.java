@@ -4,14 +4,14 @@ import java.io.IOException;
 import java.net.Socket;
 
 import com.chatserver.Utils.FileManager;
-import com.chatserver.Utils.RequestManager.ServerResponse;
+import com.chatserver.Utils.ProtocolManager.ServerResponse;
 
-public class ClientHandler implements Runnable {
+public class ConnectionHandler implements Runnable {
     private final Socket client;
     private final FileManager fm;
-    private ServerRequestHandler sh;
+    private ServerProtocolHandler sh;
 
-    public ClientHandler(Socket socket, FileManager fileManager) {
+    public ConnectionHandler(Socket socket, FileManager fileManager) {
         this.client = socket;
         this.fm = fileManager;
     }
@@ -20,7 +20,7 @@ public class ClientHandler implements Runnable {
     public void run() {
 
         try {
-            sh = new ServerRequestHandler(fm, client.getInputStream(), client.getOutputStream());
+            sh = new ServerProtocolHandler(fm, client.getInputStream(), client.getOutputStream());
 
             while (true) {
 

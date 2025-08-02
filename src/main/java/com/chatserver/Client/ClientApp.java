@@ -4,17 +4,14 @@ import java.io.IOException;
 import java.net.Socket;
 
 import com.chatserver.Utils.Config;
-import com.chatserver.Utils.FileManager;
 import com.chatserver.Utils.UI;
-import com.chatserver.Utils.FileManager.Context;
 
 public class ClientApp {
     private static boolean connected = false;
     private static Socket socket = null;
-    private static ClientRequestHandler ch;
+    private static ClientProtocolHandler ch;
 
     public static void main(String[] args) {
-        var fm = new FileManager(Context.CLIENT);
 
         UI.cleanConsole();
 
@@ -23,7 +20,7 @@ public class ClientApp {
         }
 
         try {
-            ch = new ClientRequestHandler(fm, socket.getInputStream(), socket.getOutputStream());
+            ch = new ClientProtocolHandler(socket.getInputStream(), socket.getOutputStream());
 
             while (connected) {
                 if (ch.processResponse()) {

@@ -6,7 +6,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 
-public abstract class RequestManager {
+public abstract class ProtocolManager {
     private final DataInputStream in;
     private final DataOutputStream out;
     // private final FileManager fm;
@@ -23,7 +23,7 @@ public abstract class RequestManager {
         OK_SALIR
     }
 
-    public RequestManager(InputStream input, OutputStream output) {
+    public ProtocolManager(InputStream input, OutputStream output) {
         // this.fm = fileManager;
         this.in = new DataInputStream(input);
         this.out = new DataOutputStream(output);

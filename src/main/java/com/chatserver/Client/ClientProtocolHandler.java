@@ -5,17 +5,14 @@ import java.io.InputStream;
 import java.io.OutputStream;
 import java.util.Arrays;
 
-import com.chatserver.Utils.FileManager;
-import com.chatserver.Utils.RequestManager;
+import com.chatserver.Utils.ProtocolManager;
 import com.chatserver.Utils.UI;
 
-public class ClientRequestHandler extends RequestManager {
-    private final FileManager fm;
+public class ClientProtocolHandler extends ProtocolManager {
     private Console console;
 
-    public ClientRequestHandler(FileManager fileManager, InputStream input, OutputStream output) {
+    public ClientProtocolHandler(InputStream input, OutputStream output) {
         super(input, output);
-        this.fm = fileManager;
         this.console = new Console();
     }
 

@@ -1,17 +1,15 @@
 package com.chatserver.Server;
 
 import java.io.IOException;
-import java.io.InputStream;
-import java.io.OutputStream;
 
+import com.chatserver.Network.Connection;
 import com.chatserver.Network.Protocol;
-import com.chatserver.Utils.FileManager;
 import com.chatserver.Utils.ProtocolManager;
 
 public class ServerProtocolHandler extends ProtocolManager {
 
-    public ServerProtocolHandler(FileManager fileManager, InputStream input, OutputStream out) {
-        super(input, out);
+    public ServerProtocolHandler(Connection connection) {
+        super(connection);
     }
 
     @Override

@@ -3,13 +3,15 @@ package com.chatserver.Client;
 import java.io.IOException;
 import java.net.Socket;
 
+import com.chatserver.Network.Connection;
 import com.chatserver.Utils.Config;
 import com.chatserver.Utils.UI;
 
 public class ClientApp {
     private static boolean connected = false;
-    private static Socket socket = null;
-    private static ClientProtocolHandler ch;
+    private static Socket socket;
+    private static Connection connection;
+    private static ClientProtocolHandler clientProtocol;
 
     public static void main(String[] args) {
 
@@ -20,10 +22,11 @@ public class ClientApp {
         }
 
         try {
-            ch = new ClientProtocolHandler(socket.getInputStream(), socket.getOutputStream());
+            connection = new Connection(socket);
+            clientProtocol = new ClientProtocolHandler(connection);
 
             while (connected) {
-                if (ch.processResponse()) {
+                if (clientProtocol.processResponse()) {
                     connected = false;
                 }
             }
@@ -51,11 +54,8 @@ public class ClientApp {
 
     private static void cleanUp() {
         try {
-            if (ch != null)
-                ch.close();
-
-            if (!socket.isClosed())
-                socket.close();
+            if (clientProtocol != null)
+                clientProtocol.close();
 
         } catch (IOException e) {
             System.err.println("Error al cerrar los recursos: " + e.getMessage());

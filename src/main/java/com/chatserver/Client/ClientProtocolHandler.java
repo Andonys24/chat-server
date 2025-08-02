@@ -1,10 +1,9 @@
 package com.chatserver.Client;
 
 import java.io.IOException;
-import java.io.InputStream;
-import java.io.OutputStream;
 import java.util.Arrays;
 
+import com.chatserver.Network.Connection;
 import com.chatserver.Network.Protocol;
 import com.chatserver.Utils.ProtocolManager;
 import com.chatserver.Utils.UI;
@@ -12,8 +11,8 @@ import com.chatserver.Utils.UI;
 public class ClientProtocolHandler extends ProtocolManager {
     private Console console;
 
-    public ClientProtocolHandler(InputStream input, OutputStream output) {
-        super(input, output);
+    public ClientProtocolHandler(Connection connection) {
+        super(connection);
         this.console = new Console();
     }
 

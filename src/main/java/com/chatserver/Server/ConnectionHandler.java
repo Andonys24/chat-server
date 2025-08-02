@@ -3,27 +3,30 @@ package com.chatserver.Server;
 import java.io.IOException;
 import java.net.Socket;
 
+import com.chatserver.Network.Connection;
 import com.chatserver.Utils.FileManager;
 
 public class ConnectionHandler implements Runnable {
-    private final Socket client;
     private final FileManager fm;
-    private ServerProtocolHandler sh;
+    private final Socket client;
+    private final Connection connection;
+    private ServerProtocolHandler serverProtocol;
 
-    public ConnectionHandler(Socket socket, FileManager fileManager) {
+    public ConnectionHandler(Socket socket, FileManager fileManager) throws IOException {
         this.client = socket;
         this.fm = fileManager;
+        this.connection = new Connection(this.client);
     }
 
     @Override
     public void run() {
 
         try {
-            sh = new ServerProtocolHandler(fm, client.getInputStream(), client.getOutputStream());
+            serverProtocol = new ServerProtocolHandler(connection);
 
             while (true) {
 
-                if (sh.processResponse())
+                if (serverProtocol.processResponse())
                     continue;
 
                 break;
@@ -37,19 +40,11 @@ public class ConnectionHandler implements Runnable {
     }
 
     private void cleanUp() {
-        if (client == null) {
-            System.out.println("Error: El cliente no esta inicializado");
-            return;
-        }
-
-        if (client.isClosed()) {
-            System.out.println("Error: La conexion con el cliente ya fue cerrada");
-            return;
-        }
 
         try {
-            sh.close();
-            client.close();
+            if (serverProtocol != null)
+                serverProtocol.close();
+
         } catch (IOException e) {
             System.err.println("Error al cerrar la conexion con el cliente: " + e.getMessage());
         }

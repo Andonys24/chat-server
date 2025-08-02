@@ -5,6 +5,7 @@ import java.io.InputStream;
 import java.io.OutputStream;
 import java.util.Arrays;
 
+import com.chatserver.Network.Protocol;
 import com.chatserver.Utils.ProtocolManager;
 import com.chatserver.Utils.UI;
 
@@ -16,43 +17,39 @@ public class ClientProtocolHandler extends ProtocolManager {
         this.console = new Console();
     }
 
-    public void sendReply(ClientCommand command, final String content) throws IOException {
-        super.sendReply(command.name(), content);
-    }
-
     @Override
     public boolean processResponse() throws IOException {
         String[] response = getParts();
-        var command = ServerResponse.valueOf(response[0]);
 
-        switch (command) {
-            case OK_ENTRAR:
+        switch (response[0]) { // indice 0 contiene el encabezado
+            case Protocol.RESP_OK_ENTER:
 
                 break;
-            case MENU:
-                // Obtener Menu en el formato: MENU|TITLE|OPTIONS
+            case Protocol.RESP_USERS:
+                System.out.println("Servidor: " + response[1]);
+                break;
+            case Protocol.RESP_MENU:
                 var title = response[1];
                 String[] options = Arrays.copyOfRange(response, 2, response.length);
                 UI.generateMenu(title, options);
                 break;
-            case PEDIR_ELECCION:
-                // Obtener lista de comandos para enviar como respuesta
+            case Protocol.RESP_PAUSE:
+                console.pause(response[1]);
+                break;
+            case Protocol.RESP_CHOICE:
                 String[] commands = getParts();
-                // Pedir entrada al usuario y validar rango
                 int option = console.validateOption(response[1], commands.length - 1);
-                // Enviar Mensaje
                 sendReply(commands[option], null);
                 break;
-            case ERROR_COMANDO:
+            case Protocol.RESP_ERROR_COMMAND:
                 System.out.println("Comando No Valido");
                 break;
-            case OK_SALIR:
-                // Al recibir esta respuesta cerrar la conexion
+            case Protocol.RESP_OK_EXIT:
                 console.close();
                 System.out.println("Cerrando Conexion con el servidor");
                 return true;
-
             default:
+                System.out.println("Respuesta del servidor no reconocida: " + response[0]);
                 break;
         }
 

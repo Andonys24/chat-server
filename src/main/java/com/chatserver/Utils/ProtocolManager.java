@@ -11,18 +11,6 @@ public abstract class ProtocolManager {
     private final DataOutputStream out;
     // private final FileManager fm;
 
-    public enum ClientCommand {
-        ENTRAR, ELECCION, USUARIOS, MENSAJE, TODOS, SALIR
-    }
-
-    public enum ServerResponse {
-        OK_ENTRAR, ERROR_ENTRAR, ERROR_COMANDO,
-        MENU, PEDIR_ELECCION, INFO_ENTRADA,
-        PAUSAR,
-        USUARIOS, MENSAJE, DE,
-        OK_SALIR
-    }
-
     public ProtocolManager(InputStream input, OutputStream output) {
         // this.fm = fileManager;
         this.in = new DataInputStream(input);

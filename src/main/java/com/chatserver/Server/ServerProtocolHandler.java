@@ -4,6 +4,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 
+import com.chatserver.Network.Protocol;
 import com.chatserver.Utils.FileManager;
 import com.chatserver.Utils.ProtocolManager;
 
@@ -13,40 +14,36 @@ public class ServerProtocolHandler extends ProtocolManager {
         super(input, out);
     }
 
-    public void sendReply(ServerResponse response, final String content) throws IOException {
-        super.sendReply(response.name(), content);
-    }
-
     @Override
     public boolean processResponse() throws IOException {
         sendMainMenu();
 
         String[] responseClient = getParts();
-        var command = ClientCommand.valueOf(responseClient[0]);
 
-        switch (command) {
-            case ENTRAR:
+        switch (responseClient[0]) {
+            case Protocol.CMD_ENTER:
 
                 break;
-            case USUARIOS:
+            case Protocol.CMD_USERS:
                 viewConnectedClient();
                 break;
-            case MENSAJE:
+            case Protocol.CMD_MESSAGE:
                 System.out.println("Enviando Mensaje...");
                 break;
-            case TODOS:
+            case Protocol.CMD_ALL:
 
                 break;
-
-            case SALIR:
-                sendReply(ServerResponse.OK_SALIR, null);
+            case Protocol.CMD_EXIT:
+                sendReply(Protocol.RESP_OK_EXIT, null);
                 System.out.println("Cerrando conexion con el cliente.");
                 return false;
             default:
-                System.out.println("Comando No valido: " + command);
-                sendReply(ServerResponse.ERROR_COMANDO, null);
+                System.out.println("Comando No valido: " + responseClient[0]);
+                sendReply(Protocol.RESP_ERROR_COMMAND, null);
                 break;
         }
+
+        sendReply(Protocol.RESP_PAUSE, "continuar");
 
         return true;
     }
@@ -57,8 +54,7 @@ public class ServerProtocolHandler extends ProtocolManager {
         content.append(title);
         for (var option : options)
             content.append("|").append(option);
-
-        sendReply(ServerResponse.MENU, content.toString());
+        sendReply(Protocol.RESP_MENU, content.toString());
     }
 
     public void sendCommandList(String[] commads) throws IOException {
@@ -69,22 +65,21 @@ public class ServerProtocolHandler extends ProtocolManager {
             if (i < commads.length - 1)
                 commandList.append("|");
         }
-
-        sendReply(ServerResponse.INFO_ENTRADA, commandList.toString());
+        sendReply(Protocol.RESP_INFO_ENTER, commandList.toString());
     }
 
     private void sendMainMenu() throws IOException {
         String[] options = { "Ver Usuarios Conectados", "Enviar Mensaje", "Salir" };
-        String[] commandList = { ClientCommand.USUARIOS.name(), ClientCommand.MENSAJE.name(),
-                ClientCommand.SALIR.name() };
+        String[] commandList = { Protocol.CMD_USERS, Protocol.CMD_MESSAGE, Protocol.CMD_EXIT };
 
         sendMenu("Menu Principal", options);
-        sendReply(ServerResponse.PEDIR_ELECCION, "Ingrese una opcion");
+        sendReply(Protocol.RESP_CHOICE, "Ingrese una opcion");
         sendCommandList(commandList);
     }
 
-    private void viewConnectedClient() {
+    private void viewConnectedClient() throws IOException {
         System.out.println("Solicitando ver clientes disponibles.");
+        sendReply(Protocol.RESP_USERS, "Listando Clientes");
     }
 
 }

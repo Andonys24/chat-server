@@ -4,7 +4,6 @@ import java.io.IOException;
 import java.net.Socket;
 
 import com.chatserver.Utils.FileManager;
-import com.chatserver.Utils.ProtocolManager.ServerResponse;
 
 public class ConnectionHandler implements Runnable {
     private final Socket client;
@@ -24,10 +23,8 @@ public class ConnectionHandler implements Runnable {
 
             while (true) {
 
-                if (sh.processResponse()) {
-                    sh.sendReply(ServerResponse.PAUSAR, "continuar");
+                if (sh.processResponse())
                     continue;
-                }
 
                 break;
             }

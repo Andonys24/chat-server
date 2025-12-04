@@ -1,53 +1,45 @@
-package com.chatserver.Server;
+package com.chatserver.server;
 
 import java.io.IOException;
 import java.net.Socket;
 
-import com.chatserver.Network.Connection;
-import com.chatserver.Utils.FileManager;
-
 public class ConnectionHandler implements Runnable {
-    private final FileManager fm;
     private final Socket client;
-    private final Connection connection;
-    private ServerProtocolHandler serverProtocol;
+    private ServerProtocolHandler protocolHandler;
 
-    public ConnectionHandler(Socket socket, FileManager fileManager) throws IOException {
+    public ConnectionHandler(Socket socket) {
         this.client = socket;
-        this.fm = fileManager;
-        this.connection = new Connection(this.client);
     }
 
     @Override
     public void run() {
-
         try {
-            serverProtocol = new ServerProtocolHandler(connection);
+            protocolHandler = new ServerProtocolHandler(client);
 
             while (true) {
-
-                if (serverProtocol.processResponse())
-                    continue;
-
-                break;
+                if (protocolHandler.proccessResponse()) {
+                    break;
+                }
             }
         } catch (IOException e) {
-            System.err.println("Error en manejo de el cliente: " + e.getMessage());
+            System.err.println("Desconexión abrupta detectada: " + e.getMessage());
+            // Manejar desconexión abrupta
+            if (protocolHandler != null) {
+                protocolHandler.handleAbruptDisconnection();
+            }
         } finally {
             cleanUp();
         }
-
     }
 
     private void cleanUp() {
-
         try {
-            if (serverProtocol != null)
-                serverProtocol.close();
+            if (protocolHandler != null)
+                protocolHandler.close();
 
+            client.close();
         } catch (IOException e) {
-            System.err.println("Error al cerrar la conexion con el cliente: " + e.getMessage());
+            System.err.println("Error al cerrar recursos: " + e.getMessage());
         }
     }
-
 }

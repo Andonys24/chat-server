@@ -1,4 +1,4 @@
-package com.chatserver.Utils;
+package com.chatserver.utils;
 
 import java.io.IOException;
 
@@ -36,18 +36,5 @@ public class UI {
         System.out.println("\n" + asterisk);
         System.out.println("*" + spaces + title + spaces + "*");
         System.out.println(asterisk + "\n");
-    }
-
-    public static void generateMenu(final String title, final String[] options) {
-        generateTitle(title, true);
-
-        if (options.length == 0 || options == null) {
-            System.out.println("NO hay opciones disponibles.");
-            return;
-        }
-
-        for (int i = 0; i < options.length; i++) {
-            System.out.println("[" + (i + 1) + "] - " + options[i]);
-        }
     }
 }

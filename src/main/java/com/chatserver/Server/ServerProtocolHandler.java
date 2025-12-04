@@ -1,83 +1,89 @@
-package com.chatserver.Server;
+package com.chatserver.server;
 
 import java.io.IOException;
+import java.net.Socket;
 
-import com.chatserver.Network.Connection;
-import com.chatserver.Network.Protocol;
-import com.chatserver.Utils.ProtocolManager;
+import com.chatserver.protocol.Protocol;
+import com.chatserver.user.User;
+import com.chatserver.user.UserManager;
+import com.chatserver.utils.ProtocolManager;
 
 public class ServerProtocolHandler extends ProtocolManager {
+    private User user;
 
-    public ServerProtocolHandler(Connection connection) {
-        super(connection);
+    public ServerProtocolHandler(Socket socket) throws IOException {
+        super(socket);
+    }
+
+    private void sendInfo(String type, String message) {
+        sendReply(Protocol.RESP_INFO, type + "|" + message);
     }
 
     @Override
-    public boolean processResponse() throws IOException {
-        sendMainMenu();
+    public boolean proccessResponse() throws IOException {
+        String[] response = getResponse();
 
-        String[] responseClient = getParts();
-
-        switch (responseClient[0]) {
+        switch (response[0]) {
             case Protocol.CMD_ENTER:
-
-                break;
-            case Protocol.CMD_USERS:
-                viewConnectedClient();
+                user = UserManager.addUser(response[1], this);
                 break;
             case Protocol.CMD_MESSAGE:
-                System.out.println("Enviando Mensaje...");
+                sendReply(Protocol.RESP_WRITE_TEXT, "Para quien (username)");
+                String addressee = getResponse()[1];
+
+                if (UserManager.findUserByUsername(addressee) != null) {
+                    sendReply(Protocol.RESP_WRITE_TEXT, "Escribe tu mensaje privado");
+                    String message = getResponse()[1];
+
+                    if (UserManager.sendPrivateMessage(user, addressee, message)) {
+                        sendInfo(Protocol.INFO_TYPE_SUCESS, "Mensaje privado enviado a " + addressee);
+                    } else {
+                        sendInfo(Protocol.INFO_TYPE_ERROR, "Error al enviar mensaje");
+                    }
+                } else {
+                    sendInfo(Protocol.INFO_TYPE_ERROR, "Usuario '" + addressee + "' no encontrado");
+                }
                 break;
             case Protocol.CMD_ALL:
-
+                sendReply(Protocol.RESP_WRITE_TEXT, "Escribe tu mensaje");
+                int messagesSent = UserManager.broadcastMessage(user, getResponse()[1]);
+                if (messagesSent > 0) {
+                    sendInfo(Protocol.INFO_TYPE_SUCESS, "Mensaje enviado a " + messagesSent + " usuarios");
+                } else {
+                    sendInfo(Protocol.INFO_TYPE_ERROR, "No hay usuarios conectados");
+                }
+                break;
+            case Protocol.CMD_USERS:
+                String usersList = UserManager.getUserListExcept(user);
+                sendReply(Protocol.RESP_USERS, usersList);
+                break;
+            case Protocol.CMD_CLEAN_CONSOLE:
+                sendReply(Protocol.RESP_OK_CLEAN);
+                break;
+            case Protocol.CMD_RESP_ERROR:
+                System.out.println(response[1]);
                 break;
             case Protocol.CMD_EXIT:
-                sendReply(Protocol.RESP_OK_EXIT, null);
-                System.out.println("Cerrando conexion con el cliente.");
-                return false;
+                UserManager.removeUser(user);
+                System.out.println("\nUsuario: " + user.getUsername() + " se desconecto\n");
+                sendReply(Protocol.RESP_OK_EXIT);
+                return true;
             default:
-                System.out.println("Comando No valido: " + responseClient[0]);
-                sendReply(Protocol.RESP_ERROR_COMMAND, null);
+                sendReply(Protocol.RESP_CMD_ERROR, "El comando '" + response[0] + "' NO es valido");
                 break;
         }
 
-        sendReply(Protocol.RESP_PAUSE, "continuar");
+        sendReply(Protocol.RESP_CMD);
 
-        return true;
+        return false;
     }
 
-    public void sendMenu(final String title, String[] options) throws IOException {
-        var content = new StringBuilder();
-
-        content.append(title);
-        for (var option : options)
-            content.append("|").append(option);
-        sendReply(Protocol.RESP_MENU, content.toString());
-    }
-
-    public void sendCommandList(String[] commads) throws IOException {
-        StringBuilder commandList = new StringBuilder();
-
-        for (int i = 0; i < commads.length; i++) {
-            commandList.append(commads[i]);
-            if (i < commads.length - 1)
-                commandList.append("|");
+    // Método para manejar desconexiones abruptas
+    public void handleAbruptDisconnection() {
+        if (user != null) {
+            UserManager.removeUser(user);
+            System.out.println("\nUsuario: " + user.getUsername() + " se desconecto abruptamente\n");
         }
-        sendReply(Protocol.RESP_INFO_ENTER, commandList.toString());
-    }
-
-    private void sendMainMenu() throws IOException {
-        String[] options = { "Ver Usuarios Conectados", "Enviar Mensaje", "Salir" };
-        String[] commandList = { Protocol.CMD_USERS, Protocol.CMD_MESSAGE, Protocol.CMD_EXIT };
-
-        sendMenu("Menu Principal", options);
-        sendReply(Protocol.RESP_CHOICE, "Ingrese una opcion");
-        sendCommandList(commandList);
-    }
-
-    private void viewConnectedClient() throws IOException {
-        System.out.println("Solicitando ver clientes disponibles.");
-        sendReply(Protocol.RESP_USERS, "Listando Clientes");
     }
 
 }

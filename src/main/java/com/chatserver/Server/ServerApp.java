@@ -1,37 +1,38 @@
-package com.chatserver.Server;
+package com.chatserver.server;
 
 import java.io.IOException;
 import java.net.InetAddress;
 import java.net.ServerSocket;
+import java.net.Socket;
 import java.net.UnknownHostException;
 import java.util.Scanner;
 
-import com.chatserver.Utils.Config;
-import com.chatserver.Utils.FileManager;
-import com.chatserver.Utils.UI;
+import com.chatserver.utils.Config;
+import com.chatserver.utils.UI;
 
 public class ServerApp {
     private static volatile boolean running = false;
     private static ServerSocket server;
-    private static final Object logLock = new Object();
 
     public static void main(String[] args) {
         Scanner input;
-        var fm = new FileManager(FileManager.Context.SERVER);
+
+        UI.cleanConsole();
         startServer();
 
-        if (!isRunning())
+        // Salir si el servidor no esta iniciado
+        if (!running)
             return;
 
-        // Hilo para monitorear comandos por consola
         input = new Scanner(System.in);
 
-        var consoleThread = new Thread(() -> {
-            System.out.println("Hilo de monitore Iniciado.");
+        // Creacion de hilo para escribir en consola
+        var consolethread = new Thread(() -> {
+            System.out.println("Hilo de monitoreo inicializado");
 
-            while (isRunning()) {
+            while (running) {
                 System.out.println("Ingrese 'exit' para apagar el servidor.");
-                var command = input.nextLine();
+                String command = input.nextLine();
 
                 if (!"exit".equals(command.trim().toLowerCase())) {
                     if (!command.trim().isEmpty()) {
@@ -40,44 +41,34 @@ public class ServerApp {
                     continue; // continuar esperando entrada
                 }
 
-                setRunning(false);
+                running = false;
 
                 try {
                     server.close();
-                    System.out.println("ServerSocket cerrado exitosamente");
+                    System.out.println("ServerSocket Cerrado exitosamente");
                 } catch (IOException e) {
                     System.err.println("Error al cerrar el servidor.");
                 }
             }
 
-            System.out.println("Hilo de monitoreo de consola Terminado.");
+            System.out.println("Hilo de monitoreo de consola terminado");
         });
 
-        consoleThread.setDaemon(true);
-        consoleThread.start();
+        consolethread.setDaemon(true);
+        consolethread.start();
 
         // Logica para manejar a los clientes
-        while (isRunning()) {
+        while (running) {
             try {
-                var client = server.accept();
-                var clientInfo = client.getInetAddress().toString() + ":" + client.getPort();
-                System.out.println("Cliente Conectado: " + clientInfo);
+                Socket client = server.accept();
 
-                // Crear hilo virtual por cada cliente
-                Thread.ofVirtual().start(new ConnectionHandler(client, fm));
-
+                Thread.ofVirtual().start(new ConnectionHandler(client));
             } catch (IOException e) {
-                // Si el servidor se está cerrando, no mostrar el error
-                if (isRunning()) {
-                    System.err.println("Error al aceptar el cliente: " + e.getMessage());
-                }
-                // Si el socket está cerrado, salir del bucle
-                break;
-            } catch (Exception e) {
-                System.err.println("Error inesperado: " + e.getMessage());
+                System.err.println("Error al aceptar el cliente: " + e.getMessage());
             }
         }
 
+        // cerrar Scanner
         input.close();
     }
 
@@ -88,32 +79,24 @@ public class ServerApp {
             server = new ServerSocket(PORT);
             UI.cleanConsole();
             System.out.println("Servidor Corriendo en: " + serverInfo());
-            setRunning(true);
+            running = true;
         } catch (IOException e) {
             System.err.println("Error al iniciar el servidor: " + e.getMessage());
-            setRunning(false);
+            running = false;
         }
     }
 
     private static String serverInfo() throws UnknownHostException {
+
+        if (server == null)
+            return null;
+
         var host = InetAddress.getLocalHost().getHostAddress();
         var port = server.getLocalPort();
         var info = new StringBuilder();
         info.append(host).append(":").append(port);
+
         return info.toString();
-
-    }
-
-    public static boolean isRunning() {
-        synchronized (logLock) {
-            return ServerApp.running;
-        }
-    }
-
-    public static void setRunning(boolean running) {
-        synchronized (logLock) {
-            ServerApp.running = running;
-        }
     }
 
 }

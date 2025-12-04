@@ -1,4 +1,4 @@
-package com.chatserver.Utils;
+package com.chatserver.utils;
 
 import java.io.IOException;
 import java.util.Properties;
@@ -19,6 +19,6 @@ public class Config {
     }
 
     public static String get(final String key) {
-        return  props.getProperty(key);
+        return props.getProperty(key);
     }
 }
